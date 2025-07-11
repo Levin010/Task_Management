@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+env/
+
+# Django
+*.sqlite3
+db.sqlite3
+/media/
+/assets/
+
+# Vue
+node_modules/
+dist/
+.vite/
+*.log
+
+# General
+*.env
+*.DS_Store

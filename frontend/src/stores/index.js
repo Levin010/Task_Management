@@ -1,0 +1,231 @@
+import { defineStore } from 'pinia'
+import { ref, reactive, computed } from 'vue'
+import axios from 'axios'
+
+export const useMainStore = defineStore('main', () => {
+  // 🔐 Auth state
+  const user = ref(null)
+  const isAuthenticated = computed(() => !!user.value)
+  
+  // ⏳ Loading state
+  const isLoading = ref(false)
+  
+  // 💬 Message state for cross-route notifications
+  const successMessage = ref(null)
+  const errorMessage = ref(null)
+  
+  // 📝 Form state
+  const formErrors = ref([])
+
+  // === LOADING METHODS ===
+  function setIsLoading(status) {
+    isLoading.value = status
+  }
+
+  // === MESSAGE METHODS ===
+  function setSuccessMessage(message) {
+    successMessage.value = message
+    errorMessage.value = null // Clear any existing error
+  }
+
+  function setErrorMessage(message) {
+    errorMessage.value = message
+    successMessage.value = null // Clear any existing success
+  }
+
+  function clearMessages() {
+    successMessage.value = null
+    errorMessage.value = null
+  }
+
+  // === FORM ERROR METHODS ===
+  function setFormErrors(errors) {
+    formErrors.value = errors
+  }
+
+  function clearFormErrors() {
+    formErrors.value = []
+  }
+
+  // === AUTH METHODS ===
+  function setUser(userData) {
+    user.value = userData
+  }
+
+  function clearUser() {
+    user.value = null
+  }
+
+  // Check if user is authenticated by trying to get user info
+  async function checkAuth() {
+    try {
+      const response = await axios.get('/api/v1/me/', {
+        withCredentials: true // Important for sending cookies
+      })
+      
+      if (response.data.user) {
+        setUser(response.data.user)
+        return true
+      }
+    } catch (error) {
+      console.log('Not authenticated:', error)
+      clearUser()
+    }
+    return false
+  }
+
+  // Sign up user
+  async function signup(userData) {
+    setIsLoading(true)
+    clearFormErrors()
+    
+    try {
+      const response = await axios.post('/api/v1/signup/', userData, {
+        withCredentials: true
+      })
+      
+      if (response.data.user) {
+        setUser(response.data.user)
+        setSuccessMessage('Account created successfully! Welcome aboard!')
+        return { success: true, data: response.data }
+      }
+    } catch (error) {
+      const errorData = handleAuthError(error)
+      return { success: false, error: errorData }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Login user
+  async function login(credentials) {
+    setIsLoading(true)
+    clearFormErrors()
+    
+    try {
+      const response = await axios.post('/api/v1/login/', credentials, {
+        withCredentials: true
+      })
+      
+      if (response.data.user) {
+        setUser(response.data.user)
+        setSuccessMessage('Login successful! Welcome back!')
+        return { success: true, data: response.data }
+      }
+    } catch (error) {
+      const errorData = handleAuthError(error)
+      return { success: false, error: errorData }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Logout user
+  async function logout() {
+    setIsLoading(true)
+    
+    try {
+      await axios.post('/api/v1/logout/', {}, {
+        withCredentials: true
+      })
+      
+      clearUser()
+      clearMessages()
+      setSuccessMessage('Logged out successfully!')
+      return { success: true }
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Even if logout fails on server, clear local state
+      clearUser()
+      return { success: false, error: 'Logout failed' }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Handle authentication errors
+  function handleAuthError(error) {
+    const errors = []
+    
+    if (error.response) {
+      if (error.response.data) {
+        // Handle field-specific errors from server
+        for (const property in error.response.data) {
+          if (Array.isArray(error.response.data[property])) {
+            error.response.data[property].forEach(errorMsg => {
+              errors.push(`${property}: ${errorMsg}`)
+            })
+          } else {
+            errors.push(`${property}: ${error.response.data[property]}`)
+          }
+        }
+      } else {
+        errors.push('Server error occurred. Please try again.')
+      }
+      
+      setErrorMessage('Authentication failed. Please check the errors below.')
+      
+    } else if (error.request) {
+      errors.push('Network error. Please check your connection and try again.')
+      setErrorMessage('Network error. Please check your connection.')
+      
+    } else {
+      errors.push('An unexpected error occurred. Please try again.')
+      setErrorMessage('Something went wrong. Please try again.')
+    }
+    
+    setFormErrors(errors)
+    return { errors, message: errorMessage.value }
+  }
+
+  // Refresh token (if you want to handle token refresh manually)
+  async function refreshToken() {
+    try {
+      const response = await axios.post('/api/v1/token/refresh/', {}, {
+        withCredentials: true
+      })
+      
+      // Token refresh is handled by cookies, so we just need to update user data if needed
+      if (response.data.user) {
+        setUser(response.data.user)
+      }
+      return true
+    } catch (error) {
+      console.error('Token refresh failed:', error)
+      clearUser()
+      return false
+    }
+  }
+
+  return {
+    // State
+    user,
+    isAuthenticated,
+    isLoading,
+    successMessage,
+    errorMessage,
+    formErrors,
+    
+    // Loading methods
+    setIsLoading,
+    
+    // Message methods
+    setSuccessMessage,
+    setErrorMessage,
+    clearMessages,
+    
+    // Form error methods
+    setFormErrors,
+    clearFormErrors,
+    
+    // Auth methods
+    setUser,
+    clearUser,
+    checkAuth,
+    signup,
+    login,
+    logout,
+    refreshToken,
+    handleAuthError
+  }
+})

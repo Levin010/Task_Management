@@ -113,7 +113,7 @@ const submitForm = async () => {
   
   if (result.success) {
     toast.success("Login successful! Welcome back!")
-    router.push('/dashboard') 
+    router.push('/dashboard')
   } else {
     toast.error(store.errorMessage || "Login failed. Please try again.")
   }

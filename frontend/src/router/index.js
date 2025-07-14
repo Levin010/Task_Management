@@ -18,14 +18,17 @@ const router = createRouter({
       component: () => import('../views/AboutView.vue'),
     },
     {
-        path: '/sign-up',
-        name: 'SignUp',
-        component: SignUp
+      path: '/sign-up',
+      name: 'SignUp',
+      component: SignUp
     },
     {
-        path: '/dashboard',
-        name: 'Dashboard',
-        component: Dashboard
+      path: '/dashboard',
+      name: 'Dashboard',
+      component: Dashboard,
+      meta: {
+        requiresAuth: true  
+      }
     }
   ],
 })
@@ -37,6 +40,15 @@ router.beforeEach(async (to, from, next) => {
     const isAuthenticated = await store.checkAuth()
     if (!isAuthenticated) {
       next('/')
+      return
+    }
+  }
+  
+  // Optional: Redirect authenticated users away from login/signup pages
+  if (to.name === 'home' || to.name === 'SignUp') {
+    const isAuthenticated = store.isAuthenticated
+    if (isAuthenticated) {
+      next('/dashboard')
       return
     }
   }

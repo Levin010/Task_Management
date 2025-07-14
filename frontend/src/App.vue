@@ -8,7 +8,7 @@ import { useMainStore } from '@/stores'
 
 const mainStore = useMainStore()
 
-onMounted(() => {
-  mainStore.checkAuth()
+onMounted(async () => {
+  await mainStore.checkAuth()
 })
 </script>

@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
@@ -41,31 +41,17 @@ class SignupView(generics.CreateAPIView):
             refresh = RefreshToken.for_user(user)
             access_token = refresh.access_token
 
-            # Set tokens in HTTP-only cookies
-            response = Response(
-                {"message": "Signup successful", "user": UserSerializer(user).data},
+            # Return tokens in response body instead of cookies
+            return Response(
+                {
+                    "message": "Signup successful",
+                    "user": UserSerializer(user).data,
+                    "access_token": str(access_token),
+                    "refresh_token": str(refresh),
+                    "token_type": "Bearer",
+                },
                 status=status.HTTP_201_CREATED,
             )
-
-            response.set_cookie(
-                "access_token",
-                str(access_token),
-                max_age=settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].total_seconds(),
-                httponly=True,
-                secure=True,
-                samesite="Strict",
-            )
-
-            response.set_cookie(
-                "refresh_token",
-                str(refresh),
-                max_age=settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds(),
-                httponly=True,
-                secure=True,
-                samesite="Strict",
-            )
-
-            return response
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -83,31 +69,17 @@ class LoginView(generics.GenericAPIView):
             refresh = RefreshToken.for_user(user)
             access_token = refresh.access_token
 
-            # Set tokens in HTTP-only cookies
-            response = Response(
-                {"message": "Login successful", "user": UserSerializer(user).data},
+            # Return tokens in response body instead of cookies
+            return Response(
+                {
+                    "message": "Login successful",
+                    "user": UserSerializer(user).data,
+                    "access_token": str(access_token),
+                    "refresh_token": str(refresh),
+                    "token_type": "Bearer",
+                },
                 status=status.HTTP_200_OK,
             )
-
-            response.set_cookie(
-                "access_token",
-                str(access_token),
-                max_age=settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].total_seconds(),
-                httponly=True,
-                secure=True,
-                samesite="Strict",
-            )
-
-            response.set_cookie(
-                "refresh_token",
-                str(refresh),
-                max_age=settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds(),
-                httponly=True,
-                secure=True,
-                samesite="Strict",
-            )
-
-            return response
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -124,12 +96,82 @@ class UserMeView(APIView):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def logout_view(request):
-    response = Response(
-        {"message": "Logged out successfully"}, status=status.HTTP_200_OK
-    )
-    response.delete_cookie("access_token")
-    response.delete_cookie("refresh_token")
-    return response
+    """
+    Logout view - since tokens are stored in localStorage,
+    the frontend will handle removing them.
+    Optionally, you can blacklist the refresh token here.
+    """
+    try:
+        # Get refresh token from request body
+        refresh_token = request.data.get("refresh_token")
+        if refresh_token:
+            # Blacklist the refresh token
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+        return Response(
+            {"message": "Logged out successfully"}, status=status.HTTP_200_OK
+        )
+    except TokenError:
+        return Response(
+            {"message": "Logged out successfully"}, status=status.HTTP_200_OK
+        )
+
+
+class TokenRefreshView(APIView):
+    """
+    Refresh access token using refresh token from request body
+    """
+
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        refresh_token = request.data.get("refresh_token")
+
+        if not refresh_token:
+            return Response(
+                {"detail": "Refresh token is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            refresh = RefreshToken(refresh_token)
+            new_access = refresh.access_token
+
+            response_data = {"access_token": str(new_access), "token_type": "Bearer"}
+
+            # Optional: Rotate refresh token for better security
+            # Uncomment the following lines if you want to rotate refresh tokens
+            # new_refresh = RefreshToken.for_user(User.objects.get(id=refresh['user_id']))
+            # response_data["refresh_token"] = str(new_refresh)
+
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        except TokenError:
+            return Response(
+                {"detail": "Refresh token expired or invalid."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+
+# Optional: Blacklist token view for better logout security
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def blacklist_token_view(request):
+    """
+    Blacklist a refresh token to prevent its future use
+    """
+    try:
+        refresh_token = request.data.get("refresh_token")
+        if refresh_token:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+        return Response(
+            {"message": "Token blacklisted successfully"}, status=status.HTTP_200_OK
+        )
+    except TokenError:
+        return Response({"detail": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(["POST"])

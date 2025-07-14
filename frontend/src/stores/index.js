@@ -17,6 +17,25 @@ export const useMainStore = defineStore('main', () => {
   // 📝 Form state
   const formErrors = ref([])
 
+  // === TOKEN METHODS ===
+  function getAccessToken() {
+    return localStorage.getItem('access_token')
+  }
+
+  function getRefreshToken() {
+    return localStorage.getItem('refresh_token')
+  }
+
+  function setTokens(accessToken, refreshToken) {
+    localStorage.setItem('access_token', accessToken)
+    localStorage.setItem('refresh_token', refreshToken)
+  }
+
+  function clearTokens() {
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('refresh_token')
+  }
+
   // === LOADING METHODS ===
   function setIsLoading(status) {
     isLoading.value = status
@@ -54,13 +73,23 @@ export const useMainStore = defineStore('main', () => {
 
   function clearUser() {
     user.value = null
+    clearTokens()
   }
 
   // Check if user is authenticated by trying to get user info
   async function checkAuth() {
+    const accessToken = getAccessToken()
+    
+    if (!accessToken) {
+      clearUser()
+      return false
+    }
+
     try {
       const response = await axios.get('/api/v1/me/', {
-        withCredentials: true // Important for sending cookies
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
       })
       
       if (response.data.user) {
@@ -69,6 +98,29 @@ export const useMainStore = defineStore('main', () => {
       }
     } catch (error) {
       console.log('Not authenticated:', error)
+      
+      // Try to refresh token if request failed
+      if (error.response?.status === 401) {
+        const refreshed = await refreshToken()
+        if (refreshed) {
+          // Retry the original request
+          try {
+            const retryResponse = await axios.get('/api/v1/me/', {
+              headers: {
+                'Authorization': `Bearer ${getAccessToken()}`
+              }
+            })
+            
+            if (retryResponse.data.user) {
+              setUser(retryResponse.data.user)
+              return true
+            }
+          } catch (retryError) {
+            console.log('Retry failed:', retryError)
+          }
+        }
+      }
+      
       clearUser()
     }
     return false
@@ -80,11 +132,10 @@ export const useMainStore = defineStore('main', () => {
     clearFormErrors()
     
     try {
-      const response = await axios.post('/api/v1/signup/', userData, {
-        withCredentials: true
-      })
+      const response = await axios.post('/api/v1/signup/', userData)
       
-      if (response.data.user) {
+      if (response.data.user && response.data.access_token) {
+        setTokens(response.data.access_token, response.data.refresh_token)
         setUser(response.data.user)
         setSuccessMessage('Account created successfully! Welcome aboard!')
         return { success: true, data: response.data }
@@ -103,11 +154,10 @@ export const useMainStore = defineStore('main', () => {
     clearFormErrors()
     
     try {
-      const response = await axios.post('/api/v1/login/', credentials, {
-        withCredentials: true
-      })
+      const response = await axios.post('/api/v1/login/', credentials)
       
-      if (response.data.user) {
+      if (response.data.user && response.data.access_token) {
+        setTokens(response.data.access_token, response.data.refresh_token)
         setUser(response.data.user)
         setSuccessMessage('Login successful! Welcome back!')
         return { success: true, data: response.data }
@@ -125,8 +175,14 @@ export const useMainStore = defineStore('main', () => {
     setIsLoading(true)
     
     try {
-      await axios.post('/api/v1/logout/', {}, {
-        withCredentials: true
+      const refreshToken = getRefreshToken()
+      
+      await axios.post('/api/v1/logout/', {
+        refresh_token: refreshToken
+      }, {
+        headers: {
+          'Authorization': `Bearer ${getAccessToken()}`
+        }
       })
       
       clearUser()
@@ -178,18 +234,30 @@ export const useMainStore = defineStore('main', () => {
     return { errors, message: errorMessage.value }
   }
 
-  // Refresh token (if you want to handle token refresh manually)
+  // Refresh token 
   async function refreshToken() {
+    const refreshTokenValue = getRefreshToken()
+    
+    if (!refreshTokenValue) {
+      clearUser()
+      return false
+    }
+
     try {
-      const response = await axios.post('/api/v1/token/refresh/', {}, {
-        withCredentials: true
+      const response = await axios.post('/api/v1/token/refresh/', {
+        refresh_token: refreshTokenValue
       })
-      
-      // Token refresh is handled by cookies, so we just need to update user data if needed
-      if (response.data.user) {
-        setUser(response.data.user)
+
+      if (response.data.access_token) {
+        // Update access token (and refresh token if rotated)
+        setTokens(
+          response.data.access_token, 
+          response.data.refresh_token || refreshTokenValue
+        )
+        
+        console.log('Token refreshed successfully')
+        return true
       }
-      return true
     } catch (error) {
       console.error('Token refresh failed:', error)
       clearUser()
@@ -226,6 +294,12 @@ export const useMainStore = defineStore('main', () => {
     login,
     logout,
     refreshToken,
-    handleAuthError
+    handleAuthError,
+    
+    // Token methods
+    getAccessToken,
+    getRefreshToken,
+    setTokens,
+    clearTokens
   }
 })

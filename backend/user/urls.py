@@ -9,6 +9,11 @@ urlpatterns = [
     path("profile/update/", views.update_profile, name="update_profile"),
     path("me/", views.UserMeView.as_view(), name="user-me"),
     path(
+        "token/refresh/",
+        views.TokenRefreshView.as_view(),
+        name="token_refresh",
+    ),
+    path(
         "request-password-reset/",
         views.request_password_reset,
         name="request_password_reset",

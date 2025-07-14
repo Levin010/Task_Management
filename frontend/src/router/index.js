@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue'
 import SignUp from '@/views/SignUp.vue'
 import Dashboard from '@/views/Dashboard.vue'
 import { useMainStore } from '@/stores'
+import Users from '@/views/Users.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -26,6 +27,14 @@ const router = createRouter({
       path: '/dashboard',
       name: 'Dashboard',
       component: Dashboard,
+      meta: {
+        requiresAuth: true  
+      }
+    },
+    {
+      path: '/users',
+      name: 'Users',
+      component: Users,
       meta: {
         requiresAuth: true  
       }

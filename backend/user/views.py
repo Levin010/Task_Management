@@ -174,88 +174,6 @@ def blacklist_token_view(request):
         return Response({"detail": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(["POST"])
-@permission_classes([AllowAny])
-def request_password_reset(request):
-    serializer = PasswordResetRequestSerializer(data=request.data)
-    if serializer.is_valid():
-        email = serializer.validated_data["email"]
-        try:
-            user = User.objects.get(email=email)
-
-            # Generate password reset token
-            token = default_token_generator.make_token(user)
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-
-            # Create reset link
-            reset_url = request.build_absolute_uri(
-                reverse(
-                    "password_reset_confirm", kwargs={"uidb64": uid, "token": token}
-                )
-            )
-
-            # Send email
-            send_mail(
-                "Password Reset Request",
-                f"""
-                Hi {user.first_name},
-
-                You requested to reset your password. Click the link below to reset it:
-
-                {reset_url}
-
-                If you did not request this, please ignore this email.
-
-                Regards,
-                Your App Team
-                """,
-                settings.DEFAULT_FROM_EMAIL,
-                [user.email],
-                fail_silently=False,
-            )
-        except User.DoesNotExist:
-            pass  # Don't reveal if email exists
-
-        return Response(
-            {
-                "message": "If an account with this email exists, a reset link has been sent."
-            },
-            status=status.HTTP_200_OK,
-        )
-
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(["POST"])
-@permission_classes([AllowAny])
-def password_reset_confirm(request, uidb64, token):
-    try:
-        uid = force_str(urlsafe_base64_decode(uidb64))
-        user = User.objects.get(pk=uid)
-    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-        return Response(
-            {"error": "Invalid reset link"}, status=status.HTTP_400_BAD_REQUEST
-        )
-
-    if not default_token_generator.check_token(user, token):
-        return Response(
-            {"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST
-        )
-
-    serializer = PasswordResetSerializer(data=request.data)
-    if serializer.is_valid():
-        new_password = serializer.validated_data["new_password"]
-        user.set_password(new_password)
-        user.save()
-
-        return Response(
-            {"message": "Password has been reset successfully"},
-            status=status.HTTP_200_OK,
-        )
-
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def user_profile(request):
@@ -268,7 +186,7 @@ def user_profile(request):
 @permission_classes([IsAdmin])
 def list_all_users(request):
     """Admin can view all users"""
-    users = User.objects.all()
+    users = User.objects.filter(role="user")
     serializer = UserSerializer(users, many=True)
     return Response(serializer.data)
 
@@ -298,46 +216,6 @@ def manage_user(request, user_id):
         return Response(
             {"message": "User deleted successfully"}, status=status.HTTP_204_NO_CONTENT
         )
-
-
-@api_view(["POST"])
-@permission_classes([IsAdmin])
-def promote_user(request, user_id):
-    """Admin can promote a user to admin role"""
-    try:
-        user = User.objects.get(id=user_id)
-    except User.DoesNotExist:
-        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-
-    user.role = "admin"
-    user.save()
-
-    return Response(
-        {
-            "message": f"User {user.username} promoted to admin",
-            "user": UserSerializer(user).data,
-        }
-    )
-
-
-@api_view(["POST"])
-@permission_classes([IsAdmin])
-def demote_user(request, user_id):
-    """Admin can demote an admin to regular user"""
-    try:
-        user = User.objects.get(id=user_id)
-    except User.DoesNotExist:
-        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-
-    user.role = "user"
-    user.save()
-
-    return Response(
-        {
-            "message": f"User {user.username} demoted to regular user",
-            "user": UserSerializer(user).data,
-        }
-    )
 
 
 # User can update their own profile

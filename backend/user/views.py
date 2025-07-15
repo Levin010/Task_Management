@@ -1,3 +1,4 @@
+import traceback
 from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -42,8 +43,9 @@ class SignupView(generics.CreateAPIView):
     def dispatch(self, request, *args, **kwargs):
         print("=== DISPATCH METHOD REACHED ===", file=sys.stderr, flush=True)
         print(f"Request method: {request.method}", file=sys.stderr, flush=True)
-        print(f"Request data: {request.data}", file=sys.stderr, flush=True)
         try:
+            # Try to access request.data to see if that's causing the issue
+            print(f"Request data: {request.data}", file=sys.stderr, flush=True)
             response = super().dispatch(request, *args, **kwargs)
             print(
                 f"Dispatch successful, response status: {response.status_code}",
@@ -54,35 +56,62 @@ class SignupView(generics.CreateAPIView):
         except Exception as e:
             print(f"DISPATCH ERROR: {e}", file=sys.stderr, flush=True)
             print(f"Exception type: {type(e)}", file=sys.stderr, flush=True)
-            raise
+            print(f"Traceback: {traceback.format_exc()}", file=sys.stderr, flush=True)
+            # Return a proper DRF error response
+            return Response(
+                {"error": "Internal server error", "detail": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
     def create(self, request, *args, **kwargs):
-        print("=== CREATE REACHED ===", file=sys.stderr, flush=True)
-        print("DEBUG request.data:", request.data, file=sys.stderr, flush=True)
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-
-            # Create JWT tokens
-            refresh = RefreshToken.for_user(user)
-            access_token = refresh.access_token
-
-            # Return tokens in response body instead of cookies
-            return Response(
-                {
-                    "message": "Signup successful",
-                    "user": UserSerializer(user).data,
-                    "access_token": str(access_token),
-                    "refresh_token": str(refresh),
-                    "token_type": "Bearer",
-                },
-                status=status.HTTP_201_CREATED,
+        print("=== CREATE METHOD REACHED ===", file=sys.stderr, flush=True)
+        try:
+            print("DEBUG request.data:", request.data, file=sys.stderr, flush=True)
+            print(
+                "DEBUG request.content_type:",
+                request.content_type,
+                file=sys.stderr,
+                flush=True,
             )
-        print(
-            "SIGN-UP VALIDATION ERRORS:", serializer.errors, file=sys.stderr, flush=True
-        )
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer = self.get_serializer(data=request.data)
+            print("DEBUG serializer created", file=sys.stderr, flush=True)
+
+            if serializer.is_valid():
+                print("DEBUG serializer is valid", file=sys.stderr, flush=True)
+                user = serializer.save()
+
+                # Create JWT tokens
+                refresh = RefreshToken.for_user(user)
+                access_token = refresh.access_token
+
+                # Return tokens in response body instead of cookies
+                return Response(
+                    {
+                        "message": "Signup successful",
+                        "user": UserSerializer(user).data,
+                        "access_token": str(access_token),
+                        "refresh_token": str(refresh),
+                        "token_type": "Bearer",
+                    },
+                    status=status.HTTP_201_CREATED,
+                )
+            else:
+                print(
+                    "SIGN-UP VALIDATION ERRORS:",
+                    serializer.errors,
+                    file=sys.stderr,
+                    flush=True,
+                )
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print(f"CREATE METHOD ERROR: {e}", file=sys.stderr, flush=True)
+            print(f"Exception type: {type(e)}", file=sys.stderr, flush=True)
+            print(f"Traceback: {traceback.format_exc()}", file=sys.stderr, flush=True)
+            return Response(
+                {"error": "Internal server error", "detail": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class LoginView(generics.GenericAPIView):

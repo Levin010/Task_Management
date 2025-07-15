@@ -76,8 +76,8 @@
           <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-xs sm:text-sm font-medium text-gray-600">Ongoing Tasks</p>
-                <p class="text-2xl sm:text-3xl font-bold text-black">{{ dashboardStats.ongoingTasks }}</p>
+                <p class="text-xs sm:text-sm font-medium text-gray-600">In Progress Tasks</p>
+                <p class="text-2xl sm:text-3xl font-bold text-black">{{ dashboardStats.inProgressTasks }}</p>
               </div>
               <div class="bg-blue-100 p-2 sm:p-3 rounded-full">
                 <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -150,7 +150,7 @@ const dashboardStats = ref({
   totalUsers: 0,
   totalTasks: 0,
   pendingTasks: 0,
-  ongoingTasks: 0,
+  inProgressTasks: 0,
   overdueTasks: 0,
   completedTasks: 0
 })
@@ -188,7 +188,24 @@ const fetchDashboardStats = async () => {
       return
     }
 
+    // Fetch task statistics
+    const taskStatsResponse = await axios.get('/api/v1/task-statistics/', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
     
+    const taskStats = taskStatsResponse.data
+    
+    // Update dashboard stats with task data
+    dashboardStats.value = {
+      ...dashboardStats.value,
+      totalTasks: taskStats.total_tasks || 0,
+      pendingTasks: taskStats.pending_tasks || 0,
+      inProgressTasks: taskStats.in_progress_tasks || 0,
+      overdueTasks: taskStats.overdue_tasks || 0,
+      completedTasks: taskStats.completed_tasks || 0
+    }
+    
+    // Fetch user count only for admin users
     if (user.value?.role === 'admin') {
       try {
         const usersResponse = await axios.get('/api/v1/admin/users/', {
@@ -201,18 +218,10 @@ const fetchDashboardStats = async () => {
       }
     }
     
-    dashboardStats.value = {
-      ...dashboardStats.value,
-      totalTasks: user.value?.role === 'admin' ? 156 : 23,
-      pendingTasks: user.value?.role === 'admin' ? 23 : 8,
-      ongoingTasks: user.value?.role === 'admin' ? 31 : 12,
-      overdueTasks: user.value?.role === 'admin' ? 7 : 2,
-      completedTasks: user.value?.role === 'admin' ? 95 : 1
-    }
-    
   } catch (err) {
     console.error('Error fetching dashboard stats:', err)
     error.value = 'Failed to load dashboard statistics. Please try again.'
+    toast.error('Failed to load dashboard statistics')
   } finally {
     store.setIsLoading(false)
   }

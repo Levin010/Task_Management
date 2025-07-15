@@ -5,6 +5,8 @@ from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.db.models import Q
+from django.core.mail import send_mail
+from django.conf import settings
 from .models import Task
 from .serializers import (
     TaskSerializer,
@@ -44,10 +46,14 @@ class TaskListCreateView(generics.ListCreateAPIView):
         return TaskSerializer
 
     def perform_create(self, serializer):
-        # Only admins can create tasks
         if not self.request.user.is_admin:
             raise PermissionError("Only admin users can create tasks.")
-        serializer.save()
+        task = serializer.save()
+        print(f"Task created: {task.title}")
+        print(f"Assigned to: {task.assigned_to}")
+        print(f"User email: {task.assigned_to.email if task.assigned_to else 'None'}")
+        if task.assigned_to and task.assigned_to.email:
+            send_task_assignment_email_html(task, task.assigned_to)
 
 
 class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -262,3 +268,71 @@ def update_overdue_tasks(request):
         },
         status=status.HTTP_200_OK,
     )
+
+
+def send_task_assignment_email_html(task, assigned_user):
+    """Send HTML email notification when a task is assigned to a user"""
+    try:
+        subject = f"New Task Assigned: {task.title}"
+
+        # Create HTML email content directly in the function
+        html_message = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+                    <h2 style="color: #495057; margin: 0;">New Task Assigned</h2>
+                </div>
+                
+                <p>Hello {assigned_user.username},</p>
+                
+                <p>You have been assigned a new task by Admin.</p>
+                
+                <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                    <h3 style="color: #495057; margin-top: 0;">Task Details:</h3>
+                    <p><strong>Title:</strong> {task.title}</p>
+                    <p><strong>Description:</strong> {task.description or 'No description provided'}</p>
+                    <p><strong>Due Date:</strong> {task.deadline.strftime('%B %d, %Y') if task.deadline else 'Not specified'}</p>
+                    <p><strong>Status:</strong> {task.status if task.status else 'Pending'}</p>
+                </div>
+                
+                <p>Please log into the system to view more details and start working on this task.</p>
+                
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666;">
+                    <p>This is an automated message. Please do not reply to this email.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+
+        # Create plain text version
+        plain_message = f"""
+Hello {assigned_user.username},
+
+You have been assigned a new task by Admin.
+
+Task Details:
+- Title: {task.title}
+- Description: {task.description or 'No description provided'}
+- Due Date: {task.deadline.strftime('%B %d, %Y') if task.deadline else 'Not specified'}
+- Status: {task.status if task.status else 'Pending'}
+
+Please log into the system to view more details and start working on this task.
+
+This is an automated message. Please do not reply to this email.
+        """
+
+        send_mail(
+            subject=subject,
+            message=plain_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[assigned_user.email],
+            html_message=html_message,
+            fail_silently=False,
+        )
+
+        return True
+
+    except Exception as e:
+        return False

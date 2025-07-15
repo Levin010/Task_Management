@@ -21,6 +21,10 @@ app.use(Toast)
 import { useMainStore } from './stores'
 const store = useMainStore()
 
+axios.defaults.headers.post['Content-Type'] = 'application/json'
+axios.defaults.headers.put['Content-Type'] = 'application/json'
+axios.defaults.headers.patch['Content-Type'] = 'application/json'
+
 axios.interceptors.request.use(
   (config) => {
     const token = store.getAccessToken()

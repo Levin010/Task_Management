@@ -329,7 +329,7 @@ This is an automated message. Please do not reply to this email.
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[assigned_user.email],
             html_message=html_message,
-            fail_silently=False,
+            fail_silently=True,
         )
 
         return True

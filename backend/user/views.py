@@ -52,6 +52,7 @@ class SignupView(generics.CreateAPIView):
                 },
                 status=status.HTTP_201_CREATED,
             )
+        print("SIGN-UP VALIDATION ERRORS:", serializer.errors)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

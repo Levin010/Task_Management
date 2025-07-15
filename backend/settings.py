@@ -21,7 +21,7 @@ SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret")
 DEBUG = False
 
 ALLOWED_HOSTS = [
-    "https://task-management-wone.onrender.com",
+    "task-management-wone.onrender.com",
     "localhost",
     "127.0.0.1",
 ]

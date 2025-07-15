@@ -14,6 +14,7 @@ from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
 import jwt
+import sys
 from datetime import datetime, timedelta
 from .serializers import (
     UserSignupSerializer,
@@ -33,6 +34,7 @@ class SignupView(generics.CreateAPIView):
     permission_classes = [AllowAny]
 
     def create(self, request, *args, **kwargs):
+        print("DEBUG request.data:", request.data, file=sys.stderr, flush=True)
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
@@ -52,7 +54,9 @@ class SignupView(generics.CreateAPIView):
                 },
                 status=status.HTTP_201_CREATED,
             )
-        print("SIGN-UP VALIDATION ERRORS:", serializer.errors)
+        print(
+            "SIGN-UP VALIDATION ERRORS:", serializer.errors, file=sys.stderr, flush=True
+        )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

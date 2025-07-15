@@ -19,7 +19,7 @@ SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["your-app-name.onrender.com", "localhost"]
+ALLOWED_HOSTS = ["https://task-management-wone.onrender.com", "localhost"]
 
 
 # Application definition
@@ -191,14 +191,14 @@ SIMPLE_JWT = {
 # CORS settings
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "https://task-management-mu-bice.vercel.app/",
+    "https://task-management-mu-bice.vercel.app",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://*.onrender.com",
-    "https://task-management-mu-bice.vercel.app/",
+    "https://task-management-wone.onrender.com",
+    "https://task-management-mu-bice.vercel.app",
 ]
 
 # Email configuration

@@ -33,8 +33,25 @@ class SignupView(generics.CreateAPIView):
     serializer_class = UserSignupSerializer
     permission_classes = [AllowAny]
 
+    def dispatch(self, request, *args, **kwargs):
+        print("=== DISPATCH METHOD REACHED ===", file=sys.stderr, flush=True)
+        print(f"Request method: {request.method}", file=sys.stderr, flush=True)
+        print(f"Request data: {request.data}", file=sys.stderr, flush=True)
+        try:
+            response = super().dispatch(request, *args, **kwargs)
+            print(
+                f"Dispatch successful, response status: {response.status_code}",
+                file=sys.stderr,
+                flush=True,
+            )
+            return response
+        except Exception as e:
+            print(f"DISPATCH ERROR: {e}", file=sys.stderr, flush=True)
+            print(f"Exception type: {type(e)}", file=sys.stderr, flush=True)
+            raise
+
     def create(self, request, *args, **kwargs):
-        print("=== SIGNUP VIEW REACHED ===", file=sys.stderr, flush=True)
+        print("=== CREATE REACHED ===", file=sys.stderr, flush=True)
         print("DEBUG request.data:", request.data, file=sys.stderr, flush=True)
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():

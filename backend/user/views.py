@@ -218,6 +218,18 @@ def manage_user(request, user_id):
         )
 
 
+@api_view(["POST"])
+@permission_classes([IsAdmin])
+def create_user(request):
+    """Admin can create new users"""
+    serializer = UserSerializer(data=request.data)
+    if serializer.is_valid():
+        # Set default role to 'user' if not provided
+        user = serializer.save(role="user")
+        return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 # User can update their own profile
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])

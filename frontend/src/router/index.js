@@ -4,6 +4,8 @@ import SignUp from '@/views/SignUp.vue'
 import Dashboard from '@/views/Dashboard.vue'
 import { useMainStore } from '@/stores'
 import Users from '@/views/Users.vue'
+import AllTasks from '@/views/AllTasks.vue'
+import MyTasks from '@/views/MyTasks.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -38,6 +40,22 @@ const router = createRouter({
       meta: {
         requiresAuth: true  
       }
+    },
+    {
+      path: '/all-tasks',
+      name: 'AllTasks',
+      component: AllTasks,
+      meta: {
+        requiresAuth: true  
+      }
+    },
+    {
+      path: '/my-tasks',
+      name: 'MyTasks',
+      component: MyTasks,
+      meta: {
+        requiresAuth: true  
+      }
     }
   ],
 })
@@ -53,7 +71,6 @@ router.beforeEach(async (to, from, next) => {
     }
   }
   
-  // Optional: Redirect authenticated users away from login/signup pages
   if (to.name === 'home' || to.name === 'SignUp') {
     const isAuthenticated = store.isAuthenticated
     if (isAuthenticated) {

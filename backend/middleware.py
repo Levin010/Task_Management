@@ -14,4 +14,5 @@ class DebugMiddleware:
 
         response = self.get_response(request)
         print(f"Response status: {response.status_code}", file=sys.stderr, flush=True)
+        print(f"Response content: {response.content}", file=sys.stderr, flush=True)
         return response

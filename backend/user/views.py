@@ -34,6 +34,7 @@ class SignupView(generics.CreateAPIView):
     permission_classes = [AllowAny]
 
     def create(self, request, *args, **kwargs):
+        print("=== SIGNUP VIEW REACHED ===", file=sys.stderr, flush=True)
         print("DEBUG request.data:", request.data, file=sys.stderr, flush=True)
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():

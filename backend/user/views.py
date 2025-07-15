@@ -25,7 +25,13 @@ from .serializers import (
 )
 from .permissions import IsAdmin, IsAdminOrReadOnly, IsOwnerOrAdmin
 
+from django.http import HttpResponse
+
 User = get_user_model()
+
+
+def health_check(request):
+    return HttpResponse("Django is working!")
 
 
 class SignupView(generics.CreateAPIView):

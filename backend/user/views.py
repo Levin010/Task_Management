@@ -43,9 +43,10 @@ class SignupView(generics.CreateAPIView):
     def dispatch(self, request, *args, **kwargs):
         print("=== DISPATCH METHOD REACHED ===", file=sys.stderr, flush=True)
         print(f"Request method: {request.method}", file=sys.stderr, flush=True)
+        print(
+            f"Request body: {request.body}", file=sys.stderr, flush=True
+        )  # Use .body instead of .data
         try:
-            # Try to access request.data to see if that's causing the issue
-            print(f"Request data: {request.data}", file=sys.stderr, flush=True)
             response = super().dispatch(request, *args, **kwargs)
             print(
                 f"Dispatch successful, response status: {response.status_code}",
@@ -66,7 +67,9 @@ class SignupView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         print("=== CREATE METHOD REACHED ===", file=sys.stderr, flush=True)
         try:
-            print("DEBUG request.data:", request.data, file=sys.stderr, flush=True)
+            print(
+                "DEBUG request.data:", request.data, file=sys.stderr, flush=True
+            )  # Now .data is available
             print(
                 "DEBUG request.content_type:",
                 request.content_type,

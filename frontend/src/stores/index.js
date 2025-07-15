@@ -132,7 +132,11 @@ export const useMainStore = defineStore('main', () => {
     clearFormErrors()
     
     try {
-      const response = await axios.post('/api/v1/signup/', userData)
+      const response = await axios.post('/api/v1/signup/', userData, {
+        headers: {
+            'Content-Type': 'application/json',
+        }
+      })
       
       if (response.data.user && response.data.access_token) {
         setTokens(response.data.access_token, response.data.refresh_token)
@@ -203,36 +207,57 @@ export const useMainStore = defineStore('main', () => {
   function handleAuthError(error) {
     const errors = []
     
+    console.log('Full error:', error)
+    console.log('Response status:', error.response?.status)
+    console.log('Response data type:', typeof error.response?.data)
+    console.log('Response data:', error.response?.data)
+    
     if (error.response) {
-      if (error.response.data) {
-        // Handle field-specific errors from server
-        for (const property in error.response.data) {
-          if (Array.isArray(error.response.data[property])) {
-            error.response.data[property].forEach(errorMsg => {
-              errors.push(`${property}: ${errorMsg}`)
-            })
-          } else {
-            errors.push(`${property}: ${error.response.data[property]}`)
-          }
+        if (error.response.data) {
+        // Check if response is JSON (object) or HTML (string)
+        if (typeof error.response.data === 'object' && error.response.data !== null) {
+            // Handle JSON error response from Django REST Framework
+            for (const property in error.response.data) {
+            if (Array.isArray(error.response.data[property])) {
+                error.response.data[property].forEach(errorMsg => {
+                errors.push(`${property}: ${errorMsg}`)
+                })
+            } else {
+                errors.push(`${property}: ${error.response.data[property]}`)
+            }
+            }
+        } else {
+            // Handle HTML error response (what you're getting now)
+            console.error('Received HTML instead of JSON:', error.response.data.substring(0, 200))
+            
+            if (error.response.status === 400) {
+            errors.push('Bad request. Please check your input and try again.')
+            } else if (error.response.status === 500) {
+            errors.push('Server error. Please try again later.')
+            } else if (error.response.status === 404) {
+            errors.push('API endpoint not found. Please check your configuration.')
+            } else {
+            errors.push(`Server error (${error.response.status}). Please try again.`)
+            }
         }
-      } else {
+        } else {
         errors.push('Server error occurred. Please try again.')
-      }
-      
-      setErrorMessage('Authentication failed. Please check the errors below.')
-      
+        }
+        
+        setErrorMessage('Authentication failed. Please check the errors below.')
+        
     } else if (error.request) {
-      errors.push('Network error. Please check your connection and try again.')
-      setErrorMessage('Network error. Please check your connection.')
-      
+        errors.push('Network error. Please check your connection and try again.')
+        setErrorMessage('Network error. Please check your connection.')
+        
     } else {
-      errors.push('An unexpected error occurred. Please try again.')
-      setErrorMessage('Something went wrong. Please try again.')
+        errors.push('An unexpected error occurred. Please try again.')
+        setErrorMessage('Something went wrong. Please try again.')
     }
     
     setFormErrors(errors)
     return { errors, message: errorMessage.value }
-  }
+    }
 
   // Refresh token 
   async function refreshToken() {

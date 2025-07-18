@@ -43,13 +43,20 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Password (Admin password: Admin@1234)</label>
-                        <input 
-                            v-model="password"
-                            type="password" 
-                            class="w-full px-4 py-3 border-0 border-b-2 border-gray-300 focus:border-black focus:outline-none bg-transparent text-gray-900 placeholder-gray-500"
-                            placeholder="Enter your password"
-                            required
-                        >
+                        <div class="relative">
+                            <input 
+                                v-model="password"
+                                :type="showPassword ? 'text' : 'password'" 
+                                class="w-full px-4 py-3 pr-12 border-0 border-b-2 border-gray-300 focus:border-black focus:outline-none bg-transparent text-gray-900 placeholder-gray-500"
+                                placeholder="Enter your password"
+                                required
+                            >
+                            <font-awesome-icon 
+                                :icon="['fas', showPassword ? 'eye' : 'eye-slash']" 
+                                class="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-500 hover:text-gray-700"
+                                @click="togglePasswordVisibility('password')"
+                            />
+                        </div>
                     </div>
 
                     <div class="pt-4">
@@ -83,17 +90,16 @@ const router = useRouter()
 const toast = useToast()
 const store = useMainStore()
 
-// Form fields
 const username = ref('')
 const password = ref('')
 
-// Show success message from signup if it exists
-onMounted(() => {
-  if (store.successMessage) {
-    toast.success(store.successMessage)
-    store.clearMessages()
+const showPassword = ref(false)
+
+const togglePasswordVisibility = (field) => {
+  if (field === 'password') {
+    showPassword.value = !showPassword.value
   }
-})
+}
 
 const submitForm = async () => {
   store.clearFormErrors()
@@ -118,4 +124,12 @@ const submitForm = async () => {
     toast.error(store.errorMessage || "Login failed. Please try again.")
   }
 }
+
+// Show success message from signup if it exists
+onMounted(() => {
+  if (store.successMessage) {
+    toast.success(store.successMessage)
+    store.clearMessages()
+  }
+})
 </script>

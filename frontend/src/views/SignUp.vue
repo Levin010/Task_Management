@@ -79,26 +79,40 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                        <input 
-                            v-model="password"
-                            type="password" 
-                            class="w-full px-4 py-3 border-0 border-b-2 border-gray-300 focus:border-black focus:outline-none bg-transparent text-gray-900 placeholder-gray-500"
-                            :class="{ 'border-red-500 focus:border-red-500': hasFieldError('password') }"
-                            placeholder="Enter your password"
-                            required
-                        >
+                        <div class="relative">
+                            <input 
+                                v-model="password"
+                                :type="showPassword ? 'text' : 'password'" 
+                                class="w-full px-4 py-3 pr-12 border-0 border-b-2 border-gray-300 focus:border-black focus:outline-none bg-transparent text-gray-900 placeholder-gray-500"
+                                :class="{ 'border-red-500 focus:border-red-500': hasFieldError('password') }"
+                                placeholder="Enter your password"
+                                required
+                            >
+                            <font-awesome-icon 
+                                :icon="['fas', showPassword ? 'eye' : 'eye-slash']" 
+                                class="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-500 hover:text-gray-700"
+                                @click="togglePasswordVisibility('password')"
+                            />
+                        </div>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
-                        <input 
-                            v-model="password2"
-                            type="password" 
-                            class="w-full px-4 py-3 border-0 border-b-2 border-gray-300 focus:border-black focus:outline-none bg-transparent text-gray-900 placeholder-gray-500"
-                            :class="{ 'border-red-500 focus:border-red-500': hasFieldError('password2') }"
-                            placeholder="Confirm your password"
-                            required
-                        >
+                        <div class="relative">
+                            <input 
+                                v-model="password2"
+                                :type="showPassword2 ? 'text' : 'password'" 
+                                class="w-full px-4 py-3 pr-12 border-0 border-b-2 border-gray-300 focus:border-black focus:outline-none bg-transparent text-gray-900 placeholder-gray-500"
+                                :class="{ 'border-red-500 focus:border-red-500': hasFieldError('password2') }"
+                                placeholder="Confirm your password"
+                                required
+                            >
+                            <font-awesome-icon 
+                                :icon="['fas', showPassword2 ? 'eye' : 'eye-slash']" 
+                                class="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-500 hover:text-gray-700"
+                                @click="togglePasswordVisibility('password2')"
+                            />
+                        </div>
                     </div>
 
                     <!-- Error Messages -->
@@ -161,7 +175,6 @@ const router = useRouter()
 const toast = useToast()
 const store = useMainStore()
 
-// Form fields
 const firstName = ref('')
 const lastName = ref('')
 const username = ref('')
@@ -169,7 +182,17 @@ const email = ref('')
 const password = ref('')
 const password2 = ref('')
 
-// Validation functions
+const showPassword = ref(false)
+const showPassword2 = ref(false)
+
+const togglePasswordVisibility = (field) => {
+  if (field === 'password') {
+    showPassword.value = !showPassword.value
+  } else if (field === 'password2') {
+    showPassword2.value = !showPassword2.value
+  }
+}
+
 const validateEmail = (email) => {
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   return re.test(email)
@@ -186,7 +209,6 @@ const hasFieldError = (fieldName) => {
 const submitForm = async () => {
   store.clearFormErrors()
 
-  // Client-side validation
   const clientErrors = []
 
   if (!firstName.value.trim()) {
@@ -227,7 +249,6 @@ const submitForm = async () => {
     return
   }
 
-  // Prepare form data
   const formData = {
     first_name: firstName.value.trim(),
     last_name: lastName.value.trim(),
@@ -237,7 +258,6 @@ const submitForm = async () => {
     confirm_password: password2.value
   }
 
-  // Submit to store
   const result = await store.signup(formData)
   
   if (result.success) {

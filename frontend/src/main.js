@@ -7,6 +7,9 @@ import Toast from 'vue-toastification'
 import "vue-toastification/dist/index.css";
 import axios from 'axios'
 import App from './App.vue'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { fas } from '@fortawesome/free-solid-svg-icons'
 
 axios.defaults.baseURL = import.meta.env.VITE_API_URL
 
@@ -69,5 +72,9 @@ axios.interceptors.response.use(
     return Promise.reject(error)
   }
 )
+
+library.add(fas)
+
+app.component('font-awesome-icon', FontAwesomeIcon)
 
 app.mount('#app')

@@ -87,20 +87,6 @@ TEMPLATES = [
 WSGI_APPLICATION = "backend.wsgi.application"
 
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": "Task_Management",
-#         "USER": "postgres",
-#         "PASSWORD": "omweezy10",
-#         "HOST": "localhost",
-#         "PORT": "5432",
-#     }
-# }
-
 DATABASES = {"default": dj_database_url.parse(os.getenv("DATABASE_URL"))}
 
 # Password validation
@@ -228,11 +214,3 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
-
-
-# Add at the bottom of settings.py
-print("=== ENVIRONMENT CHECK ===", file=sys.stderr, flush=True)
-print(f"SECRET_KEY set: {'SECRET_KEY' in os.environ}", file=sys.stderr, flush=True)
-print(f"DEBUG: {DEBUG}", file=sys.stderr, flush=True)
-print(f"ALLOWED_HOSTS: {ALLOWED_HOSTS}", file=sys.stderr, flush=True)
-print(f"DATABASE_URL set: {'DATABASE_URL' in os.environ}", file=sys.stderr, flush=True)

@@ -6,6 +6,7 @@ import { useMainStore } from '@/stores'
 import Users from '@/views/Users.vue'
 import AllTasks from '@/views/AllTasks.vue'
 import MyTasks from '@/views/MyTasks.vue'
+import Test from '@/views/Test.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -56,6 +57,11 @@ const router = createRouter({
       meta: {
         requiresAuth: true  
       }
+    },
+    {
+      path: '/test-path',
+      name: 'Test',
+      component: Test
     }
   ],
 })

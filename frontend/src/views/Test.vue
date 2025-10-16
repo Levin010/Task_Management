@@ -1,6 +1,8 @@
 <script setup>
-import HeroSection from '@/components/homepage/HeroSection.vue'
-import HowItWorks from '@/components/homepage/HowItWorks.vue';
+import HeroSection from '@/components/landing/HeroSection.vue'
+import HowItWorks from '@/components/landing/HowItWorks.vue';
+import CallToAction from '@/components/landing/CallToAction.vue';
+import LandingNavbar from '@/components/landing/LandingNavbar.vue';
 
 </script>
 
@@ -8,10 +10,16 @@ import HowItWorks from '@/components/homepage/HowItWorks.vue';
     <div class="h-full w-full relative">
         <div class="relative">
             <div>
+                <LandingNavbar/>
+            </div>
+            <div>
                 <HeroSection/>
             </div>
             <div>
                 <HowItWorks/>
+            </div>
+            <div>
+                <CallToAction/>
             </div>
         </div>
     </div>

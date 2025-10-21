@@ -14,7 +14,7 @@
 
         
         <div class="flex space-x-4 sm:space-x-6">
-          <a href="/signup" class="text-sm sm:text-base hover:text-gray-300 transition">Sign Up</a>
+          <a href="/sign-up" class="text-sm sm:text-base hover:text-gray-300 transition">Sign Up</a>
           <a href="/signin" class="text-sm sm:text-base hover:text-gray-300 transition">Sign In</a>
         </div>
       </div>

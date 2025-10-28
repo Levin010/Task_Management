@@ -41,47 +41,26 @@ class SignupView(generics.CreateAPIView):
     permission_classes = [AllowAny]
 
     def dispatch(self, request, *args, **kwargs):
-        print("=== DISPATCH METHOD REACHED ===", file=sys.stderr, flush=True)
-        print(f"Request method: {request.method}", file=sys.stderr, flush=True)
-        print(
-            f"Request body: {request.body}", file=sys.stderr, flush=True
-        )  # Use .body instead of .data
+        
         try:
             response = super().dispatch(request, *args, **kwargs)
-            print(
-                f"Dispatch successful, response status: {response.status_code}",
-                file=sys.stderr,
-                flush=True,
-            )
+            
             return response
         except Exception as e:
-            print(f"DISPATCH ERROR: {e}", file=sys.stderr, flush=True)
-            print(f"Exception type: {type(e)}", file=sys.stderr, flush=True)
-            print(f"Traceback: {traceback.format_exc()}", file=sys.stderr, flush=True)
-            # Return a proper DRF error response
+            
             return Response(
                 {"error": "Internal server error", "detail": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
     def create(self, request, *args, **kwargs):
-        print("=== CREATE METHOD REACHED ===", file=sys.stderr, flush=True)
+        
         try:
-            print(
-                "DEBUG request.data:", request.data, file=sys.stderr, flush=True
-            )  # Now .data is available
-            print(
-                "DEBUG request.content_type:",
-                request.content_type,
-                file=sys.stderr,
-                flush=True,
-            )
-
+            
             serializer = self.get_serializer(data=request.data)
-            print("DEBUG serializer created", file=sys.stderr, flush=True)
 
             if serializer.is_valid():
-                print("DEBUG serializer is valid", file=sys.stderr, flush=True)
+                
                 user = serializer.save()
 
                 # Create JWT tokens
@@ -108,9 +87,7 @@ class SignupView(generics.CreateAPIView):
                 )
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            print(f"CREATE METHOD ERROR: {e}", file=sys.stderr, flush=True)
-            print(f"Exception type: {type(e)}", file=sys.stderr, flush=True)
-            print(f"Traceback: {traceback.format_exc()}", file=sys.stderr, flush=True)
+            
             return Response(
                 {"error": "Internal server error", "detail": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -201,10 +178,6 @@ class TokenRefreshView(APIView):
 
             response_data = {"access_token": str(new_access), "token_type": "Bearer"}
 
-            # Optional: Rotate refresh token for better security
-            # Uncomment the following lines if you want to rotate refresh tokens
-            # new_refresh = RefreshToken.for_user(User.objects.get(id=refresh['user_id']))
-            # response_data["refresh_token"] = str(new_refresh)
 
             return Response(response_data, status=status.HTTP_200_OK)
 
@@ -215,7 +188,6 @@ class TokenRefreshView(APIView):
             )
 
 
-# Optional: Blacklist token view for better logout security
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def blacklist_token_view(request):

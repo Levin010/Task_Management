@@ -9,7 +9,7 @@
                 <div class="space-y-8">
                     <div class="text-left">
                         <h2 class="text-lg font-medium mb-4">Already have an account?</h2>
-                        <router-link to="/" class="bg-white text-black px-6 py-3 rounded-full font-medium hover:bg-gray-100 transition-colors">
+                        <router-link to="/sign-in" class="bg-white text-black px-6 py-3 rounded-full font-medium hover:bg-gray-100 transition-colors">
                             Log In
                         </router-link>
                     </div>

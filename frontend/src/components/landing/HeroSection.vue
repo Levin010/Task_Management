@@ -21,7 +21,7 @@
       </p>
       
       <a 
-        href="/signin" 
+        href="/sign-in" 
         class="inline-block bg-black hover:text-black hover:bg-white border-2 hover:border-black text-white font-semibold px-5 py-2 sm:px-6 sm:py-2.5 lg:px-8 lg:py-3 rounded-lg transition text-base sm:text-lg"
       >
         Get Started

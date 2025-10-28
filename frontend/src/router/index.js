@@ -1,25 +1,31 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import SignIn from '../views/SignIn.vue'
 import SignUp from '@/views/SignUp.vue'
 import Dashboard from '@/views/Dashboard.vue'
 import { useMainStore } from '@/stores'
 import Users from '@/views/Users.vue'
 import AllTasks from '@/views/AllTasks.vue'
 import MyTasks from '@/views/MyTasks.vue'
-import Test from '@/views/Test.vue'
+import Landing from '@/views/Landing.vue'
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: HomeView,
+      name: 'Landing',
+      component: Landing,
     },
     {
       path: '/about',
       name: 'about',
       component: () => import('../views/AboutView.vue'),
+    },
+    {
+      path: '/sign-in',
+      name: 'SignIn',
+      component: SignIn
     },
     {
       path: '/sign-up',
@@ -58,11 +64,6 @@ const router = createRouter({
         requiresAuth: true  
       }
     },
-    {
-      path: '/test-path',
-      name: 'Test',
-      component: Test
-    }
   ],
 })
 

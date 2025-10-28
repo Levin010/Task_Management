@@ -3,6 +3,7 @@ import HeroSection from '@/components/landing/HeroSection.vue'
 import HowItWorks from '@/components/landing/HowItWorks.vue';
 import CallToAction from '@/components/landing/CallToAction.vue';
 import LandingNavbar from '@/components/landing/LandingNavbar.vue';
+import FooterSection from '@/components/landing/FooterSection.vue';
 
 </script>
 
@@ -20,6 +21,9 @@ import LandingNavbar from '@/components/landing/LandingNavbar.vue';
             </div>
             <div>
                 <CallToAction/>
+            </div>
+            <div>
+                <FooterSection/>
             </div>
         </div>
     </div>

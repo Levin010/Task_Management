@@ -13,7 +13,7 @@ class UserSignupSerializer(serializers.ModelSerializer):
     confirm_password = serializers.CharField(
         write_only=True, style={"input_type": "password"}
     )
-    role = serializers.ChoiceField(choices=User.ROLE_CHOICES, default="user")
+    role = serializers.ChoiceField(choices=User.ROLE_CHOICES, default="member")
 
     class Meta:
         model = User
@@ -61,7 +61,7 @@ class UserSignupSerializer(serializers.ModelSerializer):
             last_name=validated_data["last_name"],
             username=validated_data["username"],
             email=validated_data["email"],
-            role=validated_data.get("role", "user"),
+            role=validated_data.get("role", "member"),
         )
         user.set_password(validated_data["password"])
         user.save()

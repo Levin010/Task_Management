@@ -56,10 +56,10 @@ class TaskSerializer(serializers.ModelSerializer):
             return f"{minutes} minutes"
 
     def validate_assigned_to(self, value):
-        """Ensure assigned user has 'user' role"""
-        if value.role != "user":
+        """Ensure assigned user has 'member' role"""
+        if value.role != "member":
             raise serializers.ValidationError(
-                "Tasks can only be assigned to users with 'user' role."
+                "Tasks can only be assigned to users with 'member' role."
             )
         return value
 
@@ -78,10 +78,10 @@ class TaskCreateSerializer(serializers.ModelSerializer):
         fields = ["title", "description", "assigned_to", "deadline"]
 
     def validate_assigned_to(self, value):
-        """Ensure assigned user has 'user' role"""
-        if value.role != "user":
+        """Ensure assigned user has 'member' role"""
+        if value.role != "member":
             raise serializers.ValidationError(
-                "Tasks can only be assigned to users with 'user' role."
+                "Tasks can only be assigned to users with 'member' role."
             )
         return value
 
@@ -100,10 +100,10 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
         fields = ["title", "description", "assigned_to", "deadline"]
 
     def validate_assigned_to(self, value):
-        """Ensure assigned user has 'user' role"""
-        if value.role != "user":
+        """Ensure assigned user has 'member' role"""
+        if value.role != "member":
             raise serializers.ValidationError(
-                "Tasks can only be assigned to users with 'user' role."
+                "Tasks can only be assigned to users with 'member' role."
             )
         return value
 

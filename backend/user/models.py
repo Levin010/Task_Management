@@ -5,13 +5,14 @@ from django.db import models
 class User(AbstractUser):
     ROLE_CHOICES = [
         ("admin", "Admin"),
-        ("user", "User"),
+        ("manager", "Manager"),
+        ("member", "Member"),
     ]
 
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default="user")
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default="member")
 
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ["email", "first_name", "last_name"]

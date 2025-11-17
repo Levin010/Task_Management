@@ -24,7 +24,7 @@ from .serializers import (
     PasswordResetRequestSerializer,
     PasswordResetSerializer,
 )
-from .permissions import IsAdmin, IsAdminOrReadOnly, IsOwnerOrAdmin
+from .permissions import IsAdmin, IsAdminOrManagerReadOnly, IsAdminOrReadOnly, IsOwnerOrAdmin
 
 from django.http import HttpResponse
 
@@ -216,10 +216,10 @@ def user_profile(request):
 
 # Admin-only views
 @api_view(["GET"])
-@permission_classes([IsAdmin])
+@permission_classes([IsAdminOrManagerReadOnly])
 def list_all_users(request):
-    """Admin can view all users"""
-    users = User.objects.filter(role="user")
+    """Admin and Managers can view all users"""
+    users = User.objects.all()
     serializer = UserSerializer(users, many=True)
     return Response(serializer.data)
 
@@ -257,8 +257,8 @@ def create_user(request):
     """Admin can create new users"""
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
-        # Set default role to 'user' if not provided
-        user = serializer.save(role="user")
+        # Set default role to 'member' if not provided
+        user = serializer.save(role="member")
         return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

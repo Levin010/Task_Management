@@ -1,3 +1,4 @@
+from urllib import request
 from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -18,6 +19,9 @@ from .serializers import (
 
 User = get_user_model()
 
+class IsAdminOrManager(IsAuthenticated):
+    def has_permission(self, request, view):
+        return super().has_permission(request, view) and request.user.role in ["admin", "manager"]
 
 class IsAdmin(IsAuthenticated):
     def has_permission(self, request, view):
@@ -26,8 +30,8 @@ class IsAdmin(IsAuthenticated):
 
 class TaskListCreateView(generics.ListCreateAPIView):
     """
-    List all tasks (admin sees all, users see only their assigned tasks)
-    Create new tasks (admin only)
+    List all tasks (admin and managers sees all, members see only their assigned tasks)
+    Create new tasks (admin and managers only)
     """
 
     serializer_class = TaskSerializer
@@ -35,7 +39,7 @@ class TaskListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_admin:
+        if user.role in ["admin", "manager"]:
             return Task.objects.all()
         else:
             return Task.objects.filter(assigned_to=user)
@@ -46,8 +50,8 @@ class TaskListCreateView(generics.ListCreateAPIView):
         return TaskSerializer
 
     def perform_create(self, serializer):
-        if not self.request.user.is_admin:
-            raise PermissionError("Only admin users can create tasks.")
+        if self.request.user.role not in ["admin", "manager"]:
+            raise PermissionError("Only admin and manager users can create tasks.")
         task = serializer.save()
         print(f"Task created: {task.title}")
         print(f"Assigned to: {task.assigned_to}")
@@ -59,8 +63,8 @@ class TaskListCreateView(generics.ListCreateAPIView):
 class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     Retrieve, update or delete a task
-    Admin can perform all operations
-    Users can only view tasks assigned to them
+    Admin and managers can perform all operations
+    Members can only view tasks assigned to them
     """
 
     serializer_class = TaskSerializer
@@ -68,7 +72,7 @@ class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_admin:
+        if user.role in ["admin", "manager"]:
             return Task.objects.all()
         else:
             return Task.objects.filter(assigned_to=user)
@@ -79,13 +83,13 @@ class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
         return TaskSerializer
 
     def perform_update(self, serializer):
-        if not self.request.user.is_admin:
-            raise PermissionError("Only admin users can update task details.")
+        if request.user.role not in ["admin", "manager"]:
+            raise PermissionError("Only admin and manager users can update tasks.")
         serializer.save()
 
     def perform_destroy(self, instance):
-        if not self.request.user.is_admin:
-            raise PermissionError("Only admin users can delete tasks.")
+        if request.user.role not in ["admin", "manager"]:
+            raise PermissionError("Only admin and   manager users can delete tasks.")
         instance.delete()
 
 
@@ -100,7 +104,7 @@ def update_task_status(request, pk):
     except Task.DoesNotExist:
         return Response({"detail": "Task not found."}, status=status.HTTP_404_NOT_FOUND)
 
-    if not request.user.is_admin and task.assigned_to != request.user:
+    if request.user.role not in ["admin", "manager"] and task.assigned_to != request.user:
         return Response(
             {"detail": "You can only update tasks assigned to you."},
             status=status.HTTP_403_FORBIDDEN,
@@ -176,12 +180,12 @@ def complete_task(request, pk):
 
 
 @api_view(["GET"])
-@permission_classes([IsAdmin])
+@permission_classes([IsAdminOrManager])
 def get_available_users(request):
     """
-    Get list of users with 'user' role for task assignment (admin only)
+    Get list of users with 'member' role for task assignment (admin and manager only)
     """
-    users = User.objects.filter(role="user")
+    users = User.objects.filter(role="member")
     serializer = UserTaskSerializer(users, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -192,7 +196,7 @@ def get_my_tasks(request):
     """
     Get tasks assigned to the current user
     """
-    if request.user.is_admin:
+    if request.user.role in ["admin", "manager"]:
         return Response(
             {"detail": "This endpoint is for regular users only."},
             status=status.HTTP_403_FORBIDDEN,
@@ -204,10 +208,10 @@ def get_my_tasks(request):
 
 
 @api_view(["GET"])
-@permission_classes([IsAdmin])
+@permission_classes([IsAdminOrManager])
 def get_all_tasks(request):
     """
-    Get all tasks (admin only)
+    Get all tasks (admin and manager only)
     """
     tasks = Task.objects.all()
     serializer = TaskSerializer(tasks, many=True)
@@ -222,7 +226,7 @@ def get_task_statistics(request):
     """
     user = request.user
 
-    if user.is_admin:
+    if user.role in ["admin", "manager"]:
         total_tasks = Task.objects.count()
         pending_tasks = Task.objects.filter(status="pending").count()
         in_progress_tasks = Task.objects.filter(status="in_progress").count()

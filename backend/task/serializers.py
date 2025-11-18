@@ -13,6 +13,12 @@ class TaskSerializer(serializers.ModelSerializer):
     assigned_to_name = serializers.CharField(
         source="assigned_to.get_full_name", read_only=True
     )
+    created_by_username = serializers.CharField(  
+        source="created_by.username", read_only=True
+    )
+    created_by_name = serializers.CharField(  
+        source="created_by.get_full_name", read_only=True
+    )
     is_overdue = serializers.BooleanField(read_only=True)
     time_remaining = serializers.SerializerMethodField()
     status_display = serializers.CharField(source="get_status_display", read_only=True)
@@ -26,6 +32,9 @@ class TaskSerializer(serializers.ModelSerializer):
             "assigned_to",
             "assigned_to_username",
             "assigned_to_name",
+            "created_by",
+            "created_by_username",
+            "created_by_name",
             "status",
             "status_display",
             "deadline",
@@ -33,7 +42,7 @@ class TaskSerializer(serializers.ModelSerializer):
             "is_overdue",
             "time_remaining",
         ]
-        read_only_fields = ["id", "created_at"]
+        read_only_fields = ["id", "created_at", "created_by"]
 
     def get_time_remaining(self, obj):
         """Calculate time remaining until deadline"""

@@ -52,7 +52,7 @@ class TaskListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         if self.request.user.role not in ["admin", "manager"]:
             raise PermissionError("Only admin and manager users can create tasks.")
-        task = serializer.save()
+        task = serializer.save(created_by=self.request.user)
         print(f"Task created: {task.title}")
         print(f"Assigned to: {task.assigned_to}")
         print(f"User email: {task.assigned_to.email if task.assigned_to else 'None'}")
@@ -226,12 +226,19 @@ def get_task_statistics(request):
     """
     user = request.user
 
-    if user.role in ["admin", "manager"]:
+    if user.is_admin:
         total_tasks = Task.objects.count()
         pending_tasks = Task.objects.filter(status="pending").count()
         in_progress_tasks = Task.objects.filter(status="in_progress").count()
         completed_tasks = Task.objects.filter(status="completed").count()
         overdue_tasks = Task.objects.filter(status="overdue").count()
+    elif user.role == "manager":
+        manager_tasks = Task.objects.filter(created_by=user)
+        total_tasks = manager_tasks.count()
+        pending_tasks = manager_tasks.filter(status="pending").count()
+        in_progress_tasks = manager_tasks.filter(status="in_progress").count()
+        completed_tasks = manager_tasks.filter(status="completed").count()
+        overdue_tasks = manager_tasks.filter(status="overdue").count()
     else:
         user_tasks = Task.objects.filter(assigned_to=user)
         total_tasks = user_tasks.count()
@@ -277,6 +284,14 @@ def update_overdue_tasks(request):
 def send_task_assignment_email_html(task, assigned_user):
     """Send HTML email notification when a task is assigned to a user"""
     try:
+        if task.created_by:
+            if task.created_by.role == "admin":
+                assigned_by = "Admin"
+            else:
+                assigned_by = task.created_by.get_full_name() or task.created_by.username
+        else:
+            assigned_by = "Admin"
+
         subject = f"New Task Assigned: {task.title}"
 
         # Create HTML email content directly in the function
@@ -290,7 +305,7 @@ def send_task_assignment_email_html(task, assigned_user):
                 
                 <p>Hello {assigned_user.username},</p>
                 
-                <p>You have been assigned a new task by Admin.</p>
+                <p>You have been assigned a new task by {assigned_by}.</p>
                 
                 <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; margin: 20px 0;">
                     <h3 style="color: #495057; margin-top: 0;">Task Details:</h3>
@@ -314,7 +329,7 @@ def send_task_assignment_email_html(task, assigned_user):
         plain_message = f"""
 Hello {assigned_user.username},
 
-You have been assigned a new task by Admin.
+You have been assigned a new task by {assigned_by}.
 
 Task Details:
 - Title: {task.title}

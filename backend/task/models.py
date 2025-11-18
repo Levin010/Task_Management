@@ -19,7 +19,14 @@ class Task(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name="assigned_tasks",
-        limit_choices_to={"role": "user"},
+        limit_choices_to={"role": "member"},
+    )
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="created_tasks",
+        limit_choices_to={"role__in": ["admin", "manager"]},
     )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     deadline = models.DateTimeField()

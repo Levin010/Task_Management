@@ -485,7 +485,7 @@ const fetchUsers = async () => {
     
     const token = store.getAccessToken()
     if (!token) {
-      router.push('/')
+      router.push('/sign-in')
       return
     }
 
@@ -545,7 +545,7 @@ const createUser = async () => {
     
     const token = store.getAccessToken()
     if (!token) {
-      router.push('/')
+      router.push('/sign-in')
       return
     }
 
@@ -624,7 +624,7 @@ const saveUserChanges = async () => {
     
     const token = store.getAccessToken()
     if (!token) {
-      router.push('/')
+      router.push('/sign-in')
       return
     }
 
@@ -705,7 +705,7 @@ const clearMessages = () => {
 onMounted(async () => {
   const isAuthenticated = await store.checkAuth()
   if (!isAuthenticated) {
-    router.push('/')
+    router.push('/sign-in')
     return
   }
   

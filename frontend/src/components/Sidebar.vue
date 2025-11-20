@@ -1,3 +1,26 @@
+<script setup>
+defineProps({
+  user: {
+    type: Object,
+    required: true
+  },
+  isMobileMenuOpen: {
+    type: Boolean,
+    default: false
+  }
+})
+
+const emit = defineEmits(['logout', 'closeMobileMenu'])
+
+const handleLogout = () => {
+  emit('logout')
+}
+
+const closeMobileMenu = () => {
+  emit('closeMobileMenu')
+}
+</script>
+
 <template>
   <div 
     v-if="isMobileMenuOpen" 
@@ -48,7 +71,7 @@
 
         <!-- Tasks -->
         <router-link 
-          :to="user?.role === 'admin' ? '/all-tasks' : '/my-tasks'"
+          :to="user?.role === 'admin' || user?.role === 'manager' ? '/all-tasks' : '/my-tasks'"
           class="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           active-class="bg-blue-50 text-blue-700 border-r-2 border-blue-600"
           @click="closeMobileMenu"
@@ -58,6 +81,23 @@
           </svg>
           <span>Tasks</span>
         </router-link>
+
+        <!-- Manager Only Links -->
+        <template v-if="user?.role === 'manager'">
+          <!-- User Management -->
+          <router-link 
+            to="/team-members" 
+            class="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            active-class="bg-blue-50 text-blue-700 border-r-2 border-blue-600"
+            @click="closeMobileMenu"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+            </svg>
+            <span>Team Members</span>
+          </router-link>
+
+        </template>
 
         <!-- Admin Only Links -->
         <template v-if="user?.role === 'admin'">
@@ -109,26 +149,3 @@
     </div>
   </div>
 </template>
-
-<script setup>
-defineProps({
-  user: {
-    type: Object,
-    required: true
-  },
-  isMobileMenuOpen: {
-    type: Boolean,
-    default: false
-  }
-})
-
-const emit = defineEmits(['logout', 'closeMobileMenu'])
-
-const handleLogout = () => {
-  emit('logout')
-}
-
-const closeMobileMenu = () => {
-  emit('closeMobileMenu')
-}
-</script>

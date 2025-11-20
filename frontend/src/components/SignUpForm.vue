@@ -97,7 +97,7 @@ const submitForm = async () => {
   
   if (result.success) {
     toast.success("Account created successfully! Welcome aboard!")
-    router.push('/sign-in')
+    router.push('/dashboard')
   } else {
     toast.error(store.errorMessage || "Failed to create account. Please try again.")
   }

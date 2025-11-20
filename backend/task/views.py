@@ -39,10 +39,14 @@ class TaskListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        if user.role in ["admin", "manager"]:
+
+        if user.role == "admin":
             return Task.objects.all()
+        elif user.role == "manager":
+            return Task.objects.filter(created_by=user)
         else:
             return Task.objects.filter(assigned_to=user)
+
 
     def get_serializer_class(self):
         if self.request.method == "POST":
@@ -257,6 +261,51 @@ def get_task_statistics(request):
         },
         status=status.HTTP_200_OK,
     )
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_manager_team_members(request):
+    """
+    Get all members assigned tasks by the current manager with their task statistics
+    Manager only - returns members they have assigned tasks to with stats
+    """
+    user = request.user
+    
+    # Only managers can access this endpoint
+    if user.role != "manager":
+        return Response(
+            {"detail": "This endpoint is for managers only."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+    
+    # Get all unique members assigned to tasks created by this manager
+    members = User.objects.filter(
+        task__created_by=user,
+        role="member"
+    ).distinct()
+    
+    member_data = []
+    
+    for member in members:
+        # Get all tasks assigned to this member that were created by the current manager
+        member_tasks = Task.objects.filter(assigned_to=member, created_by=user)
+        
+        stats = {
+            "id": member.id,
+            "username": member.username,
+            "email": member.email,
+            "first_name": member.first_name,
+            "last_name": member.last_name,
+            "total_tasks": member_tasks.count(),
+            "pending_tasks": member_tasks.filter(status="pending").count(),
+            "in_progress_tasks": member_tasks.filter(status="in_progress").count(),
+            "completed_tasks": member_tasks.filter(status="completed").count(),
+            "overdue_tasks": member_tasks.filter(status="overdue").count(),
+            "date_joined": member.date_joined,
+        }
+        member_data.append(stats)
+    
+    return Response(member_data, status=status.HTTP_200_OK)
 
 
 @api_view(["POST"])

@@ -11,6 +11,7 @@ urlpatterns = [
     path("available-users/", views.get_available_users, name="available-users"),
     path("all-tasks/", views.get_all_tasks, name="all-tasks"),
     path("task-statistics/", views.get_task_statistics, name="task-statistics"),
+    path("manager/team-members/", views.get_manager_team_members, name="manager-team-members"),
     path(
         "update-overdue-tasks/", views.update_overdue_tasks, name="update-overdue-tasks"
     ),

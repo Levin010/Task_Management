@@ -47,7 +47,7 @@ const fetchTeamMembers = async () => {
       return
     }
 
-    const response = await axios.get('/api/v1/tasks/manager/team-members/', {
+    const response = await axios.get('/api/v1/manager/team-members/', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
     
@@ -100,7 +100,7 @@ onMounted(async () => {
         <div class="mb-6">
           <h2 class="text-2xl sm:text-3xl font-bold text-black">Team Members</h2>
           <p class="text-gray-600 mt-2 text-sm sm:text-base">
-            View team members and their task statistics
+            View team members you've assigned tasks and their performance history.
           </p>
         </div>
 

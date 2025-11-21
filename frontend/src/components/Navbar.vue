@@ -13,19 +13,8 @@
         </button>
         
         <div class="flex items-center space-x-3">
+          <img src="/logo.png" alt="Logo" class="h-6 w-6 sm:h-8 sm:w-8">
           <h1 class="text-xl sm:text-2xl font-bold text-white">Task Management</h1>
-          
-          <span 
-            v-if="user?.role" 
-            :class="[
-              'px-2 py-1 text-xs font-medium rounded-full',
-              user.role === 'admin' 
-                ? 'bg-white text-red-800' 
-                : 'bg-white text-blue-800'
-            ]"
-          >
-            {{ user.role === 'admin' ? 'Admin' : 'User' }}
-          </span>
         </div>
       </div>
       

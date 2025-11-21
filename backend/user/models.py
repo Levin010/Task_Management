@@ -18,11 +18,13 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ["email", "first_name", "last_name"]
 
     def save(self, *args, **kwargs):
-        if not self.pk or not self.is_superuser:
-            if self.role == "admin":
-                self.is_staff = True
-            else:
-                self.is_staff = False
+        if self.is_superuser:
+            self.is_staff = True
+        elif self.role == "admin":
+            self.is_staff = True
+        else:
+            self.is_staff = False
+        
         super().save(*args, **kwargs)
 
     @property

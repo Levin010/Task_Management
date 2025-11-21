@@ -1,4 +1,7 @@
 <script setup>
+
+import { LayoutDashboard, CheckSquare, Users, LogOut, X } from 'lucide-vue-next'
+
 defineProps({
   user: {
     type: Object,
@@ -24,7 +27,7 @@ const closeMobileMenu = () => {
 <template>
   <div 
     v-if="isMobileMenuOpen" 
-    class="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
+    class="fixed inset-0 z-20 md:hidden"
     @click="closeMobileMenu"
   ></div>
 
@@ -48,9 +51,7 @@ const closeMobileMenu = () => {
           @click="closeMobileMenu"
           class="md:hidden p-1 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-black"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
+          <X class="w-5 h-5" />
         </button>
       </div>
 
@@ -62,10 +63,7 @@ const closeMobileMenu = () => {
           active-class="bg-blue-50 text-blue-700 border-r-2 border-blue-600"
           @click="closeMobileMenu"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v0a2 2 0 01-2 2H10a2 2 0 01-2-2z"></path>
-          </svg>
+          <LayoutDashboard class="w-5 h-5" />
           <span>Dashboard</span>
         </router-link>
 
@@ -76,9 +74,7 @@ const closeMobileMenu = () => {
           active-class="bg-blue-50 text-blue-700 border-r-2 border-blue-600"
           @click="closeMobileMenu"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-          </svg>
+          <CheckSquare class="w-5 h-5" />
           <span>Tasks</span>
         </router-link>
 
@@ -91,9 +87,7 @@ const closeMobileMenu = () => {
             active-class="bg-blue-50 text-blue-700 border-r-2 border-blue-600"
             @click="closeMobileMenu"
           >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-            </svg>
+            <Users class="w-5 h-5" />
             <span>Team Members</span>
           </router-link>
 
@@ -111,9 +105,7 @@ const closeMobileMenu = () => {
             active-class="bg-blue-50 text-blue-700 border-r-2 border-blue-600"
             @click="closeMobileMenu"
           >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-            </svg>
+            <Users class="w-5 h-5" />
             <span>Users</span>
           </router-link>
 
@@ -138,11 +130,9 @@ const closeMobileMenu = () => {
       <div class="p-4 border-t border-gray-200">
         <button 
           @click="handleLogout"
-          class="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+          class="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-red-600 cursor-pointer hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-          </svg>
+          <LogOut class="w-5 h-5" />
           <span>Logout</span>
         </button>
       </div>

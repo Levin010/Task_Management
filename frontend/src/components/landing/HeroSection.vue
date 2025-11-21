@@ -12,7 +12,7 @@
     </div>
 
     <div class="relative z-10 text-center text-white px-4 sm:px-6 lg:px-8 max-w-4xl">
-      <h1 class="text-4xl sm:text-5xl lg:text-5xl font-bold mb-6">
+      <h1 class="text-3xl sm:text-4xl lg:text-4xl font-bold mb-6">
         Manage all your tasks in one central location
       </h1>
       
@@ -22,7 +22,7 @@
       
       <a 
         href="/sign-in" 
-        class="inline-block bg-black hover:text-black hover:bg-white border-2 hover:border-black text-white font-semibold px-5 py-2 sm:px-6 sm:py-2.5 lg:px-8 lg:py-3 rounded-lg transition text-base sm:text-lg"
+        class="inline-block bg-black hover:text-black hover:bg-white border-2 hover:border-black text-white font-semibold px-3 py-1 sm:px-4 sm:py-1.5 lg:px-6 lg:py-2 rounded-lg transition text-base sm:text-lg"
       >
         Get Started
       </a>

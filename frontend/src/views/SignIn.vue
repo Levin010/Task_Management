@@ -31,7 +31,7 @@
                 <form @submit.prevent="submitForm" class="space-y-6">
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Username (Admin username: admin)</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
                         <input 
                             v-model="username"
                             type="text" 
@@ -42,7 +42,7 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Password (Admin password: Admin@1234)</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
                         <div class="relative">
                             <input 
                                 v-model="password"

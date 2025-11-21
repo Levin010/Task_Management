@@ -1,3 +1,4 @@
+from urllib import request
 from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -18,6 +19,9 @@ from .serializers import (
 
 User = get_user_model()
 
+class IsAdminOrManager(IsAuthenticated):
+    def has_permission(self, request, view):
+        return super().has_permission(request, view) and request.user.role in ["admin", "manager"]
 
 class IsAdmin(IsAuthenticated):
     def has_permission(self, request, view):
@@ -26,8 +30,8 @@ class IsAdmin(IsAuthenticated):
 
 class TaskListCreateView(generics.ListCreateAPIView):
     """
-    List all tasks (admin sees all, users see only their assigned tasks)
-    Create new tasks (admin only)
+    List all tasks (admin and managers sees all, members see only their assigned tasks)
+    Create new tasks (admin and managers only)
     """
 
     serializer_class = TaskSerializer
@@ -35,10 +39,14 @@ class TaskListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_admin:
+
+        if user.role == "admin":
             return Task.objects.all()
+        elif user.role == "manager":
+            return Task.objects.filter(created_by=user)
         else:
             return Task.objects.filter(assigned_to=user)
+
 
     def get_serializer_class(self):
         if self.request.method == "POST":
@@ -46,9 +54,9 @@ class TaskListCreateView(generics.ListCreateAPIView):
         return TaskSerializer
 
     def perform_create(self, serializer):
-        if not self.request.user.is_admin:
-            raise PermissionError("Only admin users can create tasks.")
-        task = serializer.save()
+        if self.request.user.role not in ["admin", "manager"]:
+            raise PermissionError("Only admin and manager users can create tasks.")
+        task = serializer.save(created_by=self.request.user)
         print(f"Task created: {task.title}")
         print(f"Assigned to: {task.assigned_to}")
         print(f"User email: {task.assigned_to.email if task.assigned_to else 'None'}")
@@ -59,8 +67,8 @@ class TaskListCreateView(generics.ListCreateAPIView):
 class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     Retrieve, update or delete a task
-    Admin can perform all operations
-    Users can only view tasks assigned to them
+    Admin and managers can perform all operations
+    Members can only view tasks assigned to them
     """
 
     serializer_class = TaskSerializer
@@ -68,7 +76,7 @@ class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_admin:
+        if user.role in ["admin", "manager"]:
             return Task.objects.all()
         else:
             return Task.objects.filter(assigned_to=user)
@@ -79,13 +87,13 @@ class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
         return TaskSerializer
 
     def perform_update(self, serializer):
-        if not self.request.user.is_admin:
-            raise PermissionError("Only admin users can update task details.")
+        if request.user.role not in ["admin", "manager"]:
+            raise PermissionError("Only admin and manager users can update tasks.")
         serializer.save()
 
     def perform_destroy(self, instance):
-        if not self.request.user.is_admin:
-            raise PermissionError("Only admin users can delete tasks.")
+        if request.user.role not in ["admin", "manager"]:
+            raise PermissionError("Only admin and   manager users can delete tasks.")
         instance.delete()
 
 
@@ -100,7 +108,7 @@ def update_task_status(request, pk):
     except Task.DoesNotExist:
         return Response({"detail": "Task not found."}, status=status.HTTP_404_NOT_FOUND)
 
-    if not request.user.is_admin and task.assigned_to != request.user:
+    if request.user.role not in ["admin", "manager"] and task.assigned_to != request.user:
         return Response(
             {"detail": "You can only update tasks assigned to you."},
             status=status.HTTP_403_FORBIDDEN,
@@ -176,12 +184,12 @@ def complete_task(request, pk):
 
 
 @api_view(["GET"])
-@permission_classes([IsAdmin])
+@permission_classes([IsAdminOrManager])
 def get_available_users(request):
     """
-    Get list of users with 'user' role for task assignment (admin only)
+    Get list of users with 'member' role for task assignment (admin and manager only)
     """
-    users = User.objects.filter(role="user")
+    users = User.objects.filter(role="member")
     serializer = UserTaskSerializer(users, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -192,7 +200,7 @@ def get_my_tasks(request):
     """
     Get tasks assigned to the current user
     """
-    if request.user.is_admin:
+    if request.user.role in ["admin", "manager"]:
         return Response(
             {"detail": "This endpoint is for regular users only."},
             status=status.HTTP_403_FORBIDDEN,
@@ -204,10 +212,10 @@ def get_my_tasks(request):
 
 
 @api_view(["GET"])
-@permission_classes([IsAdmin])
+@permission_classes([IsAdminOrManager])
 def get_all_tasks(request):
     """
-    Get all tasks (admin only)
+    Get all tasks (admin and manager only)
     """
     tasks = Task.objects.all()
     serializer = TaskSerializer(tasks, many=True)
@@ -228,6 +236,13 @@ def get_task_statistics(request):
         in_progress_tasks = Task.objects.filter(status="in_progress").count()
         completed_tasks = Task.objects.filter(status="completed").count()
         overdue_tasks = Task.objects.filter(status="overdue").count()
+    elif user.role == "manager":
+        manager_tasks = Task.objects.filter(created_by=user)
+        total_tasks = manager_tasks.count()
+        pending_tasks = manager_tasks.filter(status="pending").count()
+        in_progress_tasks = manager_tasks.filter(status="in_progress").count()
+        completed_tasks = manager_tasks.filter(status="completed").count()
+        overdue_tasks = manager_tasks.filter(status="overdue").count()
     else:
         user_tasks = Task.objects.filter(assigned_to=user)
         total_tasks = user_tasks.count()
@@ -246,6 +261,62 @@ def get_task_statistics(request):
         },
         status=status.HTTP_200_OK,
     )
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_manager_team_members(request):
+    """
+    Get all members assigned tasks by the current manager with their task statistics
+    Manager only - returns members they have assigned tasks to with stats
+    """
+    try:
+        user = request.user
+        
+        # Only managers can access this endpoint
+        if user.role != "manager":
+            return Response(
+                {"detail": "This endpoint is for managers only."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        
+        # Get all tasks created by this manager
+        manager_tasks = Task.objects.filter(created_by=user)
+        
+        # Get all unique members assigned to these tasks
+        members = User.objects.filter(
+            id__in=manager_tasks.values_list('assigned_to', flat=True),
+            role="member"
+        ).distinct()
+        
+        member_data = []
+        
+        for member in members:
+            # Get all tasks assigned to this member that were created by the current manager
+            member_tasks = manager_tasks.filter(assigned_to=member)
+            
+            stats = {
+                "id": member.id,
+                "username": member.username,
+                "email": member.email,
+                "first_name": member.first_name,
+                "last_name": member.last_name,
+                "total_tasks": member_tasks.count(),
+                "pending_tasks": member_tasks.filter(status="pending").count(),
+                "in_progress_tasks": member_tasks.filter(status="in_progress").count(),
+                "completed_tasks": member_tasks.filter(status="completed").count(),
+                "overdue_tasks": member_tasks.filter(status="overdue").count(),
+                "date_joined": member.date_joined,
+            }
+            member_data.append(stats)
+        
+        return Response(member_data, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        print(f"Error in get_manager_team_members: {str(e)}")
+        return Response(
+            {"detail": "An error occurred while fetching team members."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 @api_view(["POST"])
@@ -273,6 +344,14 @@ def update_overdue_tasks(request):
 def send_task_assignment_email_html(task, assigned_user):
     """Send HTML email notification when a task is assigned to a user"""
     try:
+        if task.created_by:
+            if task.created_by.role == "admin":
+                assigned_by = "Admin"
+            else:
+                assigned_by = task.created_by.get_full_name() or task.created_by.username
+        else:
+            assigned_by = "Admin"
+
         subject = f"New Task Assigned: {task.title}"
 
         # Create HTML email content directly in the function
@@ -286,7 +365,7 @@ def send_task_assignment_email_html(task, assigned_user):
                 
                 <p>Hello {assigned_user.username},</p>
                 
-                <p>You have been assigned a new task by Admin.</p>
+                <p>You have been assigned a new task by {assigned_by}.</p>
                 
                 <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; margin: 20px 0;">
                     <h3 style="color: #495057; margin-top: 0;">Task Details:</h3>
@@ -310,7 +389,7 @@ def send_task_assignment_email_html(task, assigned_user):
         plain_message = f"""
 Hello {assigned_user.username},
 
-You have been assigned a new task by Admin.
+You have been assigned a new task by {assigned_by}.
 
 Task Details:
 - Title: {task.title}

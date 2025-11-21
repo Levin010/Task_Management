@@ -8,7 +8,7 @@
       <div class="flex justify-between items-center h-16">
         
         <div class="flex items-center space-x-2 sm:space-x-3">
-          <img src="/logo.png" alt="Logo" class="h-8 w-8 sm:h-10 sm:w-10">
+          <img src="/logo.png" alt="Logo" class="h-6 w-6 sm:h-8 sm:w-8">
           <span class="text-sm sm:text-lg lg:text-xl font-semibold">Task Management</span>
         </div>
 

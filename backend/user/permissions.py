@@ -31,7 +31,8 @@ class IsOwnerOrAdmin(BasePermission):
         if request.user.role == "admin":
             return True
 
-        # Users can only access their own objects
+        # **CHANGE: "Users" → "Members"**
+        # Members can only access their own objects
         if hasattr(obj, "user"):
             return obj.user == request.user
 
@@ -40,3 +41,18 @@ class IsOwnerOrAdmin(BasePermission):
             return obj.id == request.user.id
 
         return False
+
+
+# **NEW: Permission class for manager read-only access to all users**
+class IsAdminOrManagerReadOnly(BasePermission):
+    """
+    Permission class to allow managers read-only access to all users, 
+    and admins full access
+    """
+
+    def has_permission(self, request, view):
+        # Managers can read all users
+        if request.method in ["GET", "HEAD", "OPTIONS"]:
+            return request.user.is_authenticated and request.user.role in ["admin", "manager"]
+        # Only admins can write
+        return request.user.is_authenticated and request.user.role == "admin"

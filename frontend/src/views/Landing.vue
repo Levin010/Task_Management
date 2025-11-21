@@ -5,6 +5,19 @@ import CallToAction from '@/components/landing/CallToAction.vue';
 import LandingNavbar from '@/components/landing/LandingNavbar.vue';
 import FooterSection from '@/components/landing/FooterSection.vue';
 
+// import { onMounted } from 'vue';
+// import { useMainStore } from '@/stores';
+// import { useToast } from 'vue-toastification';
+
+// const store = useMainStore()
+// const toast = useToast()
+
+// onMounted(() => {
+//   if (store.successMessage) {
+//     toast.success(store.successMessage)
+//     store.clearMessages()
+//   }
+// })
 </script>
 
 <template>

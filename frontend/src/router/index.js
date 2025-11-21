@@ -7,6 +7,7 @@ import Users from '@/views/Users.vue'
 import AllTasks from '@/views/AllTasks.vue'
 import MyTasks from '@/views/MyTasks.vue'
 import Landing from '@/views/Landing.vue'
+import TeamMembers from '@/views/TeamMembers.vue'
 
 
 const router = createRouter({
@@ -16,11 +17,6 @@ const router = createRouter({
       path: '/',
       name: 'Landing',
       component: Landing,
-    },
-    {
-      path: '/about',
-      name: 'about',
-      component: () => import('../views/AboutView.vue'),
     },
     {
       path: '/sign-in',
@@ -60,6 +56,14 @@ const router = createRouter({
       path: '/my-tasks',
       name: 'MyTasks',
       component: MyTasks,
+      meta: {
+        requiresAuth: true  
+      }
+    },
+    {
+      path: '/team-members',
+      name: 'TeamMembers',
+      component: TeamMembers,
       meta: {
         requiresAuth: true  
       }
